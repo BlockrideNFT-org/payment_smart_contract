@@ -9,10 +9,17 @@ url = "https://api.apr.dev"
 
 [provider]
 cluster = "Localnet"
-wallet = "/home/ademola/.config/solana/id.json"
+wallet = "packages/tests/fixtures/provider.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 packages/tests/*"
 
 [workspace]
 types = "packages/sdk/src/idl"
+
+[test]
+startup_wait = 60000
+
+[[test.genesis]]
+address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+program = "packages/tests/fixtures/mpl_token_metadata.so"

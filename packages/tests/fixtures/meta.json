@@ -1,0 +1,10 @@
+{
+    "name": "blockride test",
+    "symbol": "test 1",
+    "description": "test_description",
+    "seller_fee_basis_points": 1,
+    "external_url": "",
+    "edition": "",
+    "background_color": "000000",
+    "image": "https://raw.githubusercontent.com/BlockrideNFT-org/BlockrideHackathonApp/packages/tests/fixtures/image.png"
+}
