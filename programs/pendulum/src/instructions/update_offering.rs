@@ -1,21 +1,17 @@
 use crate::state::*;
 
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, TokenAccount};
 
 #[derive(Accounts)]
 pub struct UpdateOffering<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
     #[account(
+        mut,
         has_one = authority,
         constraint = offering.state != OfferingState::DistributionActive
     )]
     pub offering: Account<'info, Offering>,
-    #[account(token::mint = payment_mint)]
-    pub payment_token_account: Account<'info, TokenAccount>,
-    pub payment_mint: Account<'info, Mint>,
-    pub system_program: Program<'info, System>,
 }
 
 pub fn handler(

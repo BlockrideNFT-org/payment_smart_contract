@@ -1,4 +1,4 @@
-use crate::{state::*, PendulumError};
+use crate::{seeds::*, state::*, PendulumError};
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
@@ -16,13 +16,13 @@ pub struct MultisigVaultTransactionExecute<'info> {
     pub offering: Account<'info, Offering>,
     #[account(
         mut,
-        seeds = [b"distribution", offering.key().as_ref()],
+        seeds = [DISTRIBUTION_PREFIX, offering.key().as_ref()],
         bump
     )]
     pub distribution: Account<'info, Distribution>,
     #[account(
         seeds = [
-            b"round", 
+            ROUND_PREFIX,
             distribution.key().as_ref(),
             &distribution.round_index.to_le_bytes()
         ],

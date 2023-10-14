@@ -3,6 +3,7 @@
 #![allow(clippy::result_large_err)]
 
 mod instructions;
+mod seeds;
 mod state;
 mod utils;
 
@@ -119,8 +120,8 @@ pub mod pendulum {
 
 #[error_code]
 pub enum PendulumError {
-    #[msg("Attempted to purchase more than the available shares")]
-    BuyInExceededLimit,
+    #[msg("Specified purchase amount exceeds amount of available shares")]
+    NoAvailableShares,
     #[msg("Offering is closed to purchases")]
     PurchaseRoundEnded,
     #[msg("Purchase round is still active")]

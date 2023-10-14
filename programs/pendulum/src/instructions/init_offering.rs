@@ -15,7 +15,7 @@ pub struct InitOffering<'info> {
     )]
     pub offering: Account<'info, Offering>,
     /// CHECK: Initialized in handler.
-    pub offering_token_account: UncheckedAccount<'info>,
+    pub payments_token_account: UncheckedAccount<'info>,
     pub payment_mint: Account<'info, Mint>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -34,7 +34,7 @@ pub fn handler(
     // Create the token account for receiving payments owned by the offering.
     utils::create_token_account(
         &ctx.accounts.initiator,
-        &ctx.accounts.offering_token_account,
+        &ctx.accounts.payments_token_account,
         &ctx.accounts.offering.to_account_info(),
         &ctx.accounts.payment_mint.to_account_info(),
         &ctx.accounts.system_program,
@@ -48,7 +48,7 @@ pub fn handler(
         bought_shares: 0,
         buy_ins: 0,
         payment_mint: ctx.accounts.payment_mint.key(),
-        offering_payments_vault: ctx.accounts.offering_token_account.key(),
+        payments_token_account: ctx.accounts.payments_token_account.key(),
         price_per_share,
         state: OfferingState::BuyInActive,
         title,

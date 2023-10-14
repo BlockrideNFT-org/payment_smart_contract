@@ -17,7 +17,7 @@ pub struct Offering {
     ///
     /// This is created during offering initialization and is owned
     /// by the offering account.
-    pub offering_payments_vault: Pubkey,
+    pub payments_token_account: Pubkey,
     /// The cost(token amount) of a single share.
     pub price_per_share: u64,
     /// The state of this offering.

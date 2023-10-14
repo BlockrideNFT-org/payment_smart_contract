@@ -1,5 +1,5 @@
 use crate::instruction::{ExecuteVaultTransaction, MultisigVaultTransfer};
-use crate::{state::*, PendulumError};
+use crate::{seeds::*, state::*, PendulumError};
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::Instruction;
@@ -32,7 +32,7 @@ pub struct KickoffMultisigVaultTransaction<'info> {
     pub payer: Signer<'info>,
     #[account(
         mut,
-        seeds = [b"distribution", offering.key().as_ref()],
+        seeds = [DISTRIBUTION_PREFIX, offering.key().as_ref()],
         bump,
     )]
     pub distribution: Account<'info, Distribution>,
@@ -41,7 +41,7 @@ pub struct KickoffMultisigVaultTransaction<'info> {
         payer = payer, //todo: should be clockwork payer
         space = DistributionRound::SPACE,
         seeds = [
-            b"round", 
+            ROUND_PREFIX,
             distribution.key().as_ref(),
             &distribution.round_index.checked_add(1).unwrap().to_le_bytes()
         ],

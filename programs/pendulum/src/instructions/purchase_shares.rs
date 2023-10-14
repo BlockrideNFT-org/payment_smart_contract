@@ -1,4 +1,4 @@
-use crate::{state::*, utils, PendulumError};
+use crate::{seeds::*, state::*, utils, PendulumError};
 
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
@@ -14,7 +14,7 @@ pub struct PurchaseShares<'info> {
 
     #[account(
         mut,
-        has_one = offering_payments_vault,
+        has_one = payments_token_account,
         constraint = offering.state == OfferingState::BuyInActive,
     )]
     pub offering: Account<'info, Offering>,
@@ -23,7 +23,7 @@ pub struct PurchaseShares<'info> {
         space = BuyIn::SPACE,
         payer = buyer,
         seeds = [
-            b"buy-in", 
+            BUY_IN_PREFIX,
             offering.key().as_ref(),
             &(offering.buy_ins.checked_add(1).unwrap() as u64).to_le_bytes()
         ],
@@ -32,7 +32,7 @@ pub struct PurchaseShares<'info> {
     pub buy_in: Account<'info, BuyIn>,
     #[account(mut)]
     /// CHECK: Checked with `has_one` constraint on offering account.
-    pub offering_payments_vault: UncheckedAccount<'info>,
+    pub payments_token_account: UncheckedAccount<'info>,
 
     #[account(mut)]
     pub nft_mint: Signer<'info>,
@@ -64,10 +64,7 @@ pub fn handler(mut ctx: Context<PurchaseShares>, shares: u16, beneficiary: Pubke
         .initial_shares
         .checked_sub(accounts.offering.bought_shares)
         .unwrap();
-    require!(
-        shares <= available_shares,
-        PendulumError::BuyInExceededLimit
-    );
+    require!(shares <= available_shares, PendulumError::NoAvailableShares);
 
     let purchase_index = accounts.offering.buy_ins.checked_add(1).unwrap();
     accounts.offering.bought_shares = accounts.offering.bought_shares.checked_add(shares).unwrap();
@@ -79,7 +76,7 @@ pub fn handler(mut ctx: Context<PurchaseShares>, shares: u16, beneficiary: Pubke
     utils::transfer_tokens(
         payment_amount,
         accounts.buyer_token_account.to_account_info(),
-        accounts.offering_payments_vault.to_account_info(),
+        accounts.payments_token_account.to_account_info(),
         accounts.buyer.to_account_info(),
         accounts.token_program.to_account_info(),
     )?;

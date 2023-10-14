@@ -1,6 +1,6 @@
 use crate::instruction::CalculateMultisigVaultTransaction;
-use crate::state::*;
 use crate::PendulumError;
+use crate::{seeds::*, state::*};
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::Instruction;
@@ -21,12 +21,12 @@ pub struct InitDistribution<'info> {
     #[account(
         mut,
         has_one = authority,
-        has_one = offering_payments_vault,
+        has_one = payments_token_account,
         constraint = offering.state == OfferingState::BuyInEnded @ PendulumError::PurchaseRoundNotEnded
     )]
     pub offering: Account<'info, Offering>,
     /// CHECK: The offering vault that holds payment.
-    pub offering_payments_vault: UncheckedAccount<'info>,
+    pub payments_token_account: UncheckedAccount<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub authority: Signer<'info>,
@@ -34,7 +34,7 @@ pub struct InitDistribution<'info> {
         init,
         payer = payer,
         space = Distribution::SPACE,
-        seeds = [b"distribution", offering.key().as_ref()],
+        seeds = [DISTRIBUTION_PREFIX, offering.key().as_ref()],
         bump
     )]
     pub distribution: Account<'info, Distribution>,
