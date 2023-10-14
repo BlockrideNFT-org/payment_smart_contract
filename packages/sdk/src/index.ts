@@ -13,7 +13,7 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { type Pendulum, IDL } from "./idl/pendulum";
-import { PROGRAM_ID } from "./constants";
+import { DEVNET_PROGRAM_ID } from "./constants";
 import type BN from "bn.js";
 import {
   initializeOffering,
@@ -29,7 +29,7 @@ export class PendulumClient {
     readonly provider: AnchorProvider,
     programId?: PublicKey
   ) {
-    const pid = programId ?? PROGRAM_ID;
+    const pid = programId ?? DEVNET_PROGRAM_ID;
     this.program = new Program<Pendulum>(IDL, pid, provider);
   }
 
