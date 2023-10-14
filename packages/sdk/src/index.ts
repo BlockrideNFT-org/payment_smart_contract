@@ -5,9 +5,11 @@ import {
   utils,
 } from "@coral-xyz/anchor";
 import {
+  type ConfirmOptions,
   type GetProgramAccountsFilter,
-  type PublicKey,
   Keypair,
+  type PublicKey,
+  type Signer,
   Transaction,
 } from "@solana/web3.js";
 import { type Pendulum, IDL } from "./idl/pendulum";
@@ -110,6 +112,18 @@ export class PendulumClient {
     );
 
     return new Transaction().add(purchaseInstruction);
+  }
+
+  public async sendAndConfirmTransaction(
+    transaction: Transaction,
+    signers?: Signer[],
+    opts?: ConfirmOptions
+  ): Promise<string> {
+    return this.provider
+      .sendAndConfirm(transaction, signers, opts)
+      .catch((e) => {
+        throw e;
+      });
   }
 
   async fetchOfferings(
