@@ -21,9 +21,12 @@ pub struct InitDistribution<'info> {
     #[account(
         mut,
         has_one = authority,
-        constraint = !offering.open @ PendulumError::PurchaseRoundNotEnded
+        has_one = offering_payments_vault,
+        constraint = offering.state == OfferingState::BuyInEnded @ PendulumError::PurchaseRoundNotEnded
     )]
     pub offering: Account<'info, Offering>,
+    /// CHECK: The offering vault that holds payment.
+    pub offering_payments_vault: UncheckedAccount<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub authority: Signer<'info>,
@@ -87,6 +90,9 @@ pub fn handler(
     // amount to directly deposit to the thread.
     thread_deposit_lamports: u64,
 ) -> Result<()> {
+    // Start with closing out the round
+    ctx.accounts.offering.state = OfferingState::DistributionActive;
+
     // 1. ~Create Squads Multisig~
     let cpi_ctx = CpiContext::new(
         ctx.accounts.squads_program.to_account_info(),
@@ -134,7 +140,9 @@ pub fn handler(
     };
     ctx.accounts.distribution.set_inner(distribution);
 
-    // 2. ~Fund the distribution account~
+    // 2. ~TODO: Transfer round tokens to the multisig vault token account~
+
+    // 3. ~Fund the distribution account~
     let initial_payer_balance = ctx.accounts.payer.lamports();
     **ctx.accounts.payer.try_borrow_mut_lamports().unwrap() = initial_payer_balance
         .checked_sub(distribution_deposit_lamports)
@@ -149,7 +157,7 @@ pub fn handler(
         .checked_add(distribution_deposit_lamports)
         .unwrap();
 
-    // 3. ~Setup a clockwork thread to regularly propose vault-transactions~
+    // 4. ~Setup a clockwork thread to regularly propose vault-transactions~
     let clockwork_assigned_instruction = Instruction {
         program_id: crate::ID,
         accounts: vec![

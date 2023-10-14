@@ -9,7 +9,7 @@ use multisig::state::{SEED_PREFIX, SEED_VAULT};
 pub struct MultisigVaultTransfer<'info> {
     #[account(
         mut,
-        constraint = !offering.open @ PendulumError::PurchaseRoundNotEnded
+        constraint = offering.state == OfferingState::DistributionActive @PendulumError::DistributionRoundNotActive,
     )]
     pub offering: Account<'info, Offering>,
     #[account(

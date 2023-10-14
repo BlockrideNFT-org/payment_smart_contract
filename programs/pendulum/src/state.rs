@@ -14,15 +14,69 @@ pub struct Offering {
     /// The token used for payment.
     pub payment_mint: Pubkey,
     /// The token account payment tokens are sent to.
-    pub payment_receipt_token_account: Pubkey,
+    ///
+    /// This is created during offering initialization and is owned
+    /// by the offering account.
+    pub offering_payments_vault: Pubkey,
     /// The cost(token amount) of a single share.
     pub price_per_share: u64,
-    /// Whether or not this offering is open for buy-in.
-    pub open: bool,
+    /// The state of this offering.
+    pub state: OfferingState,
+    /// The offering title. This is appended with a buy-in index to
+    /// set the title for purchase nfts.
+    pub title: String,
+    /// The offering symbol. This is appended with a buy-in index to
+    /// set the symbol for purchase nfts.
+    pub symbol: String,
+    /// The uri for purchase nfts.
+    pub nft_uri: String,
 }
 
+/// Max metaplex length is 200. We subtract 3 so there's space left for `-{buy-in index}`.
+const MAX_TITLE_LEN: usize = 200 - 3;
+/// Max metaplex length is 10. We subtract 3 so there's space left for `-{buy-in index}`.
+const MAX_SYMBOL_LEN: usize = 10 - 3;
+/// Max metaplex length is 32
+const MAX_URI_LEN: usize = 32;
+
 impl Offering {
-    pub const SPACE: usize = 8 + 32 + 2 + 2 + 8 + 32 + 32 + 8;
+    pub const SPACE: usize = 8
+        + 32
+        + 2
+        + 2
+        + 2
+        + 32
+        + 32
+        + 8
+        + OfferingState::SPACE
+        + (4 + MAX_TITLE_LEN)
+        + (4 + MAX_SYMBOL_LEN)
+        + (4 + MAX_URI_LEN);
+
+    pub fn validate(&self) -> Result<()> {
+        if self.title.len() > MAX_TITLE_LEN
+            || self.symbol.len() > MAX_SYMBOL_LEN
+            || self.nft_uri.len() > MAX_URI_LEN
+        {
+            return Err(crate::PendulumError::InvalidOfferingParameters.into());
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Eq, PartialEq)]
+pub enum OfferingState {
+    /// Offering is open for purchases.
+    BuyInActive,
+    /// Offering is closed to purchases.
+    BuyInEnded,
+    /// Distribution round has been triggered.
+    DistributionActive,
+}
+
+impl OfferingState {
+    pub const SPACE: usize = 1;
 }
 
 #[account]
@@ -54,16 +108,19 @@ pub struct Distribution {
 }
 
 impl Distribution {
-    pub const SPACE: usize = 8 + 32 + 32 + 32 + 2;
+    pub const SPACE: usize = 8 + 8 + 32 + 1 + 32 + 32 + 32 + 8 + 2 + 32;
 }
 
 #[account]
 pub struct DistributionRound {
-    pub inner: Option<DistributionRoundInner>,
+    pub inner: Option<RoundInner>,
+}
+impl DistributionRound {
+    pub const SPACE: usize = 8 + (1 + RoundInner::SPACE);
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
-pub struct DistributionRoundInner {
+pub struct RoundInner {
     /// The thread in charge of tracking and executing this round's proposal.
     pub clockwork_thread: Pubkey,
     /// The multisig proposal this round is dependent on.
@@ -81,6 +138,10 @@ pub struct DistributionRoundInner {
     pub paid_out: u64,
 }
 
+impl RoundInner {
+    pub const SPACE: usize = 32 + 32 + 8 + 2 + 32 + RoundStatus::SPACE + 8;
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub enum RoundStatus {
     WaitingForProposal,
@@ -88,9 +149,8 @@ pub enum RoundStatus {
     ProposalExecuted { earnings: u64 },
     FullyDisbursed,
 }
-
-impl DistributionRound {
-    pub const SPACE: usize = 100;
+impl RoundStatus {
+    pub const SPACE: usize = 1 + 8;
 }
 
 #[account]
@@ -107,8 +167,10 @@ pub struct BuyIn {
     pub timestamp: i64,
     /// The wallet that's entitled to receive earnings.
     pub beneficiary: Pubkey,
+    /// The nft-mint that's proof of tokenized ownership.
+    pub token_mint: Pubkey,
 }
 
 impl BuyIn {
-    pub const SPACE: usize = 8 + 8 + 2 + 32 + 8 + 32;
+    pub const SPACE: usize = 8 + 32 + 2 + 2 + 8 + 32 + 32;
 }

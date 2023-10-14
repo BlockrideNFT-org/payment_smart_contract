@@ -7,6 +7,7 @@ pub mod init_offering;
 pub mod multisig_transaction_execute;
 pub mod multisig_vault_transfer;
 pub mod purchase_shares;
+pub mod update_offering;
 
 pub use claim_earnings::*;
 pub use cw_calculate_multisig_vault_transaction::*;
@@ -17,3 +18,4 @@ pub use init_offering::*;
 pub use multisig_transaction_execute::*;
 pub use multisig_vault_transfer::*;
 pub use purchase_shares::*;
+pub use update_offering::*;

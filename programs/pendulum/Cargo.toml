@@ -20,3 +20,5 @@ anchor-lang = "=0.27.0"
 anchor-spl = "0.27.0"
 clockwork-sdk = "2.0.18"
 multisig = { git = "https://github.com/Squads-Protocol/v4.git", package="squads-multisig-program", features=["cpi"] }
+mpl-token-metadata = { version="1.13.2", features = ["no-entrypoint"] }
+solana-security-txt = "1.1.1"

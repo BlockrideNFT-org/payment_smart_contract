@@ -4,12 +4,26 @@
 
 mod instructions;
 mod state;
+mod utils;
 
 use anchor_lang::prelude::*;
 use clockwork_sdk::state::ThreadResponse;
 use instructions::*;
 
+#[cfg(not(feature = "no-entrypoint"))]
+use solana_security_txt::security_txt;
+
 declare_id!("Ercwg63fCFawCuVrExYFFumXxyt4DVAHVpmjLPLCA2yB");
+
+#[cfg(not(feature = "no-entrypoint"))]
+security_txt! {
+    name: "Blockride: Pendulum",
+    project_url: "",
+    contacts: "",
+    policy: "",
+    preferred_languages: "en",
+    source_code: ""
+}
 
 #[program]
 pub mod pendulum {
@@ -20,8 +34,28 @@ pub mod pendulum {
         authority: Pubkey,
         initial_shares: u16,
         price_per_share: u64,
+        title: String,
+        symbol: String,
+        nft_uri: String,
     ) -> Result<()> {
-        init_offering::handler(ctx, authority, initial_shares, price_per_share)
+        init_offering::handler(
+            ctx,
+            authority,
+            initial_shares,
+            price_per_share,
+            title,
+            symbol,
+            nft_uri,
+        )
+    }
+
+    pub fn update_offering(
+        ctx: Context<UpdateOffering>,
+        new_title: Option<String>,
+        new_symbol: Option<String>,
+        new_nft_uri: Option<String>,
+    ) -> Result<()> {
+        update_offering::handler(ctx, new_title, new_symbol, new_nft_uri)
     }
 
     pub fn purchase_shares(
@@ -91,6 +125,10 @@ pub enum PendulumError {
     PurchaseRoundEnded,
     #[msg("Purchase round is still active")]
     PurchaseRoundNotEnded,
-    #[msg("Tried to open a vault transaction prematurely")]
+    #[msg("Distribution has not been initialized")]
+    DistributionRoundNotActive,
+    #[msg("Proposal cannot be activated yet")]
     PrematureProposalCreation,
+    #[msg("Invalid offering parameters")]
+    InvalidOfferingParameters,
 }

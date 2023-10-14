@@ -1,7 +1,7 @@
 use crate::{state::*, PendulumError};
 
 use anchor_lang::prelude::*;
-use anchor_spl::token::{ Token, TokenAccount };
+use anchor_spl::token::{Token, TokenAccount};
 
 use multisig::cpi::accounts::VaultTransactionExecute;
 use multisig::cpi::vault_transaction_execute;
@@ -11,7 +11,7 @@ use multisig::state::{SEED_PREFIX, SEED_VAULT};
 pub struct MultisigVaultTransactionExecute<'info> {
     #[account(
         mut,
-        constraint = !offering.open @ PendulumError::PurchaseRoundNotEnded
+        constraint = offering.state == OfferingState::DistributionActive @ PendulumError::DistributionRoundNotActive,
     )]
     pub offering: Account<'info, Offering>,
     #[account(

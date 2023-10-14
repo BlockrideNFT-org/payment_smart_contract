@@ -2,7 +2,7 @@ use crate::state::*;
 
 use anchor_lang::prelude::*;
 use clockwork_sdk::state::ThreadResponse;
-use multisig::{ Proposal, ProposalStatus };
+use multisig::{Proposal, ProposalStatus};
 
 // It doesn't need to take in the functions needed to initiate transfer.
 // It creates a new thread irrespective of whether or not time has elapsed.

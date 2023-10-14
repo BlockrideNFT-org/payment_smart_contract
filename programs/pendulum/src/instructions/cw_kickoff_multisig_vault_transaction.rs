@@ -25,7 +25,7 @@ pub const SECONDS_IN_DAYS: u64 = 60 * 60 * 24;
 pub struct KickoffMultisigVaultTransaction<'info> {
     #[account(
         mut,
-        constraint = !offering.open @ PendulumError::PurchaseRoundNotEnded
+        constraint = offering.state == OfferingState::DistributionActive
     )]
     pub offering: Account<'info, Offering>,
     #[account(mut)]
@@ -130,7 +130,7 @@ pub fn handler(ctx: Context<KickoffMultisigVaultTransaction>) -> Result<ThreadRe
     }
 
     let new_round = DistributionRound {
-        inner: Some(DistributionRoundInner {
+        inner: Some(RoundInner {
             clockwork_thread: ctx.accounts.clockwork_thread.key(),
             proposal: ctx.accounts.proposal.key(),
             end_timestamp: new_round_end_time,
@@ -270,7 +270,7 @@ pub fn handler(ctx: Context<KickoffMultisigVaultTransaction>) -> Result<ThreadRe
             .as_bytes()
             .to_vec(), //TODO!: Make unique and descriptive
         vec![on_proposal_change_instruction.into()],
-        //TODO!: Check for changes on the proposal
+        //TODO!: Also check for changes on the proposal
         Trigger::Account {
             address: ctx.accounts.proposal.key(),
             offset: 8 + 32 + 8, // the proposal status
