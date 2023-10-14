@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { PROGRAM_ID, TOKEN_METADATA_PROGRAM_ID } from "./constants";
+import { DEVNET_PROGRAM_ID, TOKEN_METADATA_PROGRAM_ID } from "./constants";
 import type BN from "bn.js";
 
 const enum Seeds {
@@ -10,26 +10,29 @@ const enum Seeds {
 
 export const deriveBuyInAddress = (
   offering: PublicKey,
-  index: BN
+  index: BN,
+  programId: PublicKey
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from(Seeds.BUY_IN), offering.toBuffer(), index.toBuffer("le", 8)],
-    PROGRAM_ID
+    programId
   );
 };
 
 export const deriveDistributionAddress = (
-  offering: PublicKey
+  offering: PublicKey,
+  programId: PublicKey
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from(Seeds.DISTRIBUTION), offering.toBuffer()],
-    PROGRAM_ID
+    programId
   );
 };
 
 export const deriveDistributionRoundAddress = (
   distribution: PublicKey,
-  index: BN
+  index: BN,
+  programId: PublicKey
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [
@@ -37,7 +40,7 @@ export const deriveDistributionRoundAddress = (
       distribution.toBuffer(),
       index.toBuffer("le", 8),
     ],
-    PROGRAM_ID
+    programId
   );
 };
 

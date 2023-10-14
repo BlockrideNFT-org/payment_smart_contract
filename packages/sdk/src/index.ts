@@ -22,6 +22,8 @@ import {
 } from "./instructions";
 import { BuyInAccount, OfferingAccount } from "./state";
 
+export { BuyInAccount, OfferingAccount };
+
 export class PendulumClient {
   readonly program: Program<Pendulum>;
 
@@ -33,6 +35,13 @@ export class PendulumClient {
     this.program = new Program<Pendulum>(IDL, pid, provider);
   }
 
+  public static get(
+    provider: AnchorProvider,
+    programId?: PublicKey
+  ): PendulumClient {
+    return new PendulumClient(provider, programId);
+  }
+
   /** Initialize a new offering */
   public async initializeOffering(
     offeringAuthority: PublicKey,
@@ -42,23 +51,27 @@ export class PendulumClient {
     title: string,
     symbol: string,
     nftUri: string
-  ): Promise<Transaction> {
-    const offering = Keypair.generate();
+  ): Promise<{ newOffering: PublicKey }> {
+    let offering = Keypair.generate();
 
     const initInstruction = await initializeOffering(
       this.program,
       offeringAuthority,
       paymentMint,
+      offering.publicKey,
       initialShares,
       pricePerShare,
       title,
       symbol,
       nftUri,
-      this.provider.publicKey,
-      offering
+      this.provider.publicKey
     );
+    let transaction = new Transaction().add(initInstruction);
 
-    return new Transaction().add(initInstruction);
+    await this.sendAndConfirmTransaction(transaction, [offering]);
+    return {
+      newOffering: offering.publicKey,
+    };
   }
 
   /** Update meta-information about an offering. */
@@ -67,7 +80,7 @@ export class PendulumClient {
     newTitle: string | null,
     newSymbol: string | null,
     newUri: string | null
-  ): Promise<Transaction> {
+  ): Promise<void> {
     const updateInstruction = await updateOffering(
       this.program,
       this.provider.publicKey,
@@ -77,7 +90,8 @@ export class PendulumClient {
       newUri
     );
 
-    return new Transaction().add(updateInstruction);
+    let transaction = new Transaction().add(updateInstruction);
+    await this.sendAndConfirmTransaction(transaction, []);
   }
 
   /** Purchase a share. Ownership of the purchase belongs to the public key of the
@@ -86,35 +100,46 @@ export class PendulumClient {
     offering: PublicKey,
     beneficiary: PublicKey,
     sharesToPurchase: number,
-    buyerTokenAccount: PublicKey | null
-  ): Promise<Transaction> {
+    fromTokenAccount: PublicKey | null
+  ): Promise<{
+    nftMint: PublicKey;
+    buyIn: PublicKey;
+    fromTokenAccount: PublicKey;
+    mintedNftTo: PublicKey;
+  }> {
     const newMint = Keypair.generate();
-
     const offeringAccount = await this.program.account.offering.fetch(offering);
 
-    const buyerToken =
-      buyerTokenAccount ??
+    const tokenAccount =
+      fromTokenAccount ??
       utils.token.associatedAddress({
         mint: offeringAccount.paymentMint,
         owner: this.provider.publicKey,
       });
 
-    const purchaseInstruction = await purchaseShares(
+    const { instruction, buyInAddress, mintedNftTo } = await purchaseShares(
       this.program,
       this.provider.publicKey,
-      buyerToken,
+      tokenAccount,
       offering,
       beneficiary,
       sharesToPurchase,
-      newMint,
+      newMint.publicKey,
       offeringAccount.buyIns + 1,
       offeringAccount.paymentsTokenAccount
     );
 
-    return new Transaction().add(purchaseInstruction);
+    let transaction = new Transaction().add(instruction);
+    await this.sendAndConfirmTransaction(transaction, [newMint]);
+    return {
+      nftMint: newMint.publicKey,
+      buyIn: buyInAddress,
+      fromTokenAccount: tokenAccount,
+      mintedNftTo,
+    };
   }
 
-  public async sendAndConfirmTransaction(
+  async sendAndConfirmTransaction(
     transaction: Transaction,
     signers?: Signer[],
     opts?: ConfirmOptions
@@ -129,7 +154,7 @@ export class PendulumClient {
   async fetchOfferings(
     memcmp?: Buffer | GetProgramAccountsFilter[]
   ): Promise<OfferingAccount[]> {
-    const offerings = await this.program.account.offering.all();
+    const offerings = await this.program.account.offering.all(memcmp);
     return offerings.map((offering) =>
       OfferingAccount.fromIdlAccount(offering.account, offering.publicKey)
     );
@@ -138,7 +163,7 @@ export class PendulumClient {
   async fetchBuyIns(
     memcmp?: Buffer | GetProgramAccountsFilter[]
   ): Promise<BuyInAccount[]> {
-    const buyIns = await this.program.account.buyIn.all();
+    const buyIns = await this.program.account.buyIn.all(memcmp);
     return buyIns.map((buyIn) =>
       BuyInAccount.fromIdlAccount(buyIn.account, buyIn.publicKey)
     );

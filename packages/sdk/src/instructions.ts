@@ -16,17 +16,17 @@ export const initializeOffering = async (
   program: Program<Pendulum>,
   authority: PublicKey,
   paymentMint: PublicKey,
+  offering: PublicKey,
   initialShares: number,
   pricePerShare: BN,
   title: string,
   symbol: string,
   nftUri: string,
-  initiator: PublicKey,
-  offering: Keypair
+  initiator: PublicKey
 ): Promise<TransactionInstruction> => {
   const paymentsTokenAccount = utils.token.associatedAddress({
     mint: paymentMint,
-    owner: offering.publicKey,
+    owner: offering,
   });
 
   return program.methods
@@ -40,11 +40,10 @@ export const initializeOffering = async (
     )
     .accounts({
       initiator,
-      offering: offering.publicKey,
+      offering,
       paymentsTokenAccount,
       paymentMint,
     })
-    .signers([offering])
     .instruction();
 };
 
@@ -72,21 +71,29 @@ export const purchaseShares = async (
   offering: PublicKey,
   beneficiary: PublicKey,
   shares: number,
-  nftMint: Keypair,
+  nftMint: PublicKey,
   nextBuyInIndex: number,
   paymentsTokenAccount: PublicKey
-): Promise<TransactionInstruction> => {
-  const buyIn = deriveBuyInAddress(offering, new BN(nextBuyInIndex))[0];
+): Promise<{
+  instruction: TransactionInstruction;
+  buyInAddress: PublicKey;
+  mintedNftTo: PublicKey;
+}> => {
+  const buyIn = deriveBuyInAddress(
+    offering,
+    new BN(nextBuyInIndex),
+    program.programId
+  )[0];
 
-  const nftMetadata = deriveMplMetadataAddress(nftMint.publicKey);
-  const nftMasterEdition = deriveMplMasterEditionAddress(nftMint.publicKey);
+  const nftMetadata = deriveMplMetadataAddress(nftMint);
+  const nftMasterEdition = deriveMplMasterEditionAddress(nftMint);
 
   const beneficiaryTokenAccount = utils.token.associatedAddress({
-    mint: nftMint.publicKey,
+    mint: nftMint,
     owner: beneficiary,
   });
 
-  return program.methods
+  let instruction = await program.methods
     .purchaseShares(shares, beneficiary)
     .accounts({
       buyer,
@@ -94,13 +101,18 @@ export const purchaseShares = async (
       offering,
       buyIn,
       paymentsTokenAccount,
-      nftMint: nftMint.publicKey,
+      nftMint,
       nftMetadata,
       nftMasterEdition,
       beneficiaryAccount: beneficiary,
       beneficiaryTokenAccount,
       tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
     })
-    .signers([nftMint])
     .instruction();
+
+  return {
+    instruction,
+    buyInAddress: buyIn,
+    mintedNftTo: beneficiaryTokenAccount,
+  };
 };
