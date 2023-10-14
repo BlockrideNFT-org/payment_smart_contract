@@ -171,7 +171,7 @@ export class PendulumClient {
   /** Get all the active purchases for a particular wallet */
   public async fetchBuyInsForBeneficiary(
     beneficiary: PublicKey
-  ): Promise<OfferingAccount[]> {
+  ): Promise<BuyInAccount[]> {
     return this.fetchBuyIns([
       {
         memcmp: {
