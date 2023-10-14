@@ -1,19 +1,46 @@
 {
+    "workspaces": [
+        "packages/sdk",
+        "packages/tests"
+    ],
+    "private": true,
     "scripts": {
+        "program:lint": "cargo fmt --all -- --check && cargo clippy -- --deny warnings",
+        "lint": "yarn workspaces run lint",
         "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-        "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+        "test": "anchor test",
+        "test:anchor": "yarn mocha -p ./tsconfig.json --no-parallel -t 1000000 packages/tests/**/*.ts",
+        "program:build": "anchor build",
+        "build": "yarn workspaces run build"
     },
     "dependencies": {
-        "@coral-xyz/anchor": "^0.28.0"
+        "@coral-xyz/anchor": "^0.28.0",
+        "@solana/web3.js": "^1.87.1"
     },
     "devDependencies": {
-        "chai": "^4.3.4",
-        "mocha": "^9.0.3",
-        "ts-mocha": "^10.0.0",
+        "@coral-xyz/anchor-cli": "^0.26.0",
         "@types/bn.js": "^5.1.0",
         "@types/chai": "^4.3.0",
         "@types/mocha": "^9.0.0",
-        "typescript": "^4.3.5",
-        "prettier": "^2.6.2"
-    }
+        "@typescript-eslint/eslint-plugin": "^5.50.0",
+        "@typescript-eslint/parser": "^5.50.0",
+        "chai": "^4.3.4",
+        "cross-env": "^7.0.3",
+        "eslint": "^8.33.0",
+        "eslint-config-prettier": "^8.6.0",
+        "eslint-config-standard-with-typescript": "^34.0.0",
+        "eslint-plugin-file-extension-in-import-ts": "^1.0.2",
+        "eslint-plugin-import": "^2.25.3",
+        "eslint-plugin-n": "^15.6.1",
+        "eslint-plugin-prettier": "^4.2.1",
+        "eslint-plugin-promise": "6.1.1",
+        "eslint-plugin-react": "^7.32.2",
+        "lerna": "^6.4.1",
+        "mocha": "^10.2.0",
+        "prettier": "^2.7.1",
+        "ts-node": "^10.9.1",
+        "tsx": "^3.12.3",
+        "typescript": "*"
+    },
+    "name": "blockride"
 }
