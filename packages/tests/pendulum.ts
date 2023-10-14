@@ -9,7 +9,7 @@ const LOCALNET_ADDRESS = new PublicKey(
   "Ercwg63fCFawCuVrExYFFumXxyt4DVAHVpmjLPLCA2yB"
 );
 const TEST_URI =
-  "https://raw.githubusercontent.com/BlockrideNFT-org/BlockrideHackathonApp/packages/tests/fixtures/meta.json";
+  "https://raw.githubusercontent.com/BlockrideNFT-org/payment_smart_contract/main/packages/tests/fixtures/meta.json";
 
 describe("soar", () => {
   const provider = anchor.AnchorProvider.env();
