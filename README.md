@@ -1,1 +1,1 @@
-# payment_smart_contract
+## Blockride Smart Contracts
