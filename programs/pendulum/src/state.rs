@@ -32,12 +32,12 @@ pub struct Offering {
     pub nft_uri: String,
 }
 
-/// Max metaplex length is 200. We subtract 3 so there's space left for `-{buy-in index}`.
-const MAX_TITLE_LEN: usize = 200 - 3;
-/// Max metaplex length is 10. We subtract 3 so there's space left for `-{buy-in index}`.
+/// Max metaplex length is 32. We subtract 3 so there's space left to append `-{buy-in index}`.
+const MAX_TITLE_LEN: usize = 32 - 1;
+/// Max metaplex length is 10. We subtract 3 so there's space left to append `-{buy-in index}`.
 const MAX_SYMBOL_LEN: usize = 10 - 3;
-/// Max metaplex length is 32
-const MAX_URI_LEN: usize = 32;
+/// Max metaplex length is 200.
+const MAX_URI_LEN: usize = 200;
 
 impl Offering {
     pub const SPACE: usize = 8

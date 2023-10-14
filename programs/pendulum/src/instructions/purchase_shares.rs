@@ -10,6 +10,7 @@ pub struct PurchaseShares<'info> {
     #[account(mut)]
     pub buyer: Signer<'info>,
     /// CHECK: Checked via transfer CPI
+    #[account(mut)]
     pub buyer_token_account: UncheckedAccount<'info>,
 
     #[account(
@@ -110,8 +111,8 @@ pub fn handler(mut ctx: Context<PurchaseShares>, shares: u16, beneficiary: Pubke
 
     // Make `buy-in` account the update-authority.
     let update_authority = &accounts.buy_in;
-    // Make `offering` account the creator.
-    let creator = Some(accounts.offering.key());
+    // Make `buy0in` account the creator.
+    let creator = Some(accounts.buy_in.key());
 
     let metadata_name = format!("{}-{}", accounts.offering.title, purchase_index);
     let metadata_symbol = format!("{}-{}", accounts.offering.symbol, purchase_index);
@@ -119,9 +120,9 @@ pub fn handler(mut ctx: Context<PurchaseShares>, shares: u16, beneficiary: Pubke
     let bump = *ctx.bumps.get("buy_in").unwrap();
     let offering_key = accounts.offering.key();
     let seeds = &[
-        b"buy-in",
+        BUY_IN_PREFIX,
         offering_key.as_ref(),
-        &purchase_index.to_le_bytes(),
+        &(u64::from(purchase_index)).to_le_bytes(),
         &[bump],
     ];
     let buy_in_seeds = &[&seeds[..]];

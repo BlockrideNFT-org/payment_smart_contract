@@ -15,6 +15,7 @@ pub struct InitOffering<'info> {
     )]
     pub offering: Account<'info, Offering>,
     /// CHECK: Initialized in handler.
+    #[account(mut)]
     pub payments_token_account: UncheckedAccount<'info>,
     pub payment_mint: Account<'info, Mint>,
     pub system_program: Program<'info, System>,
